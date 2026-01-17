@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package api.v1;
+
+option go_package = "github.com/bachtg/distributed_sys/api/v1;v1";
+
+service PingService {
+  rpc Ping(PingRequest) returns (PingResponse);
+}
+
+message PingRequest {
+  string message = 1;
+}
+
+message PingResponse {
+  string message = 1;
+}
