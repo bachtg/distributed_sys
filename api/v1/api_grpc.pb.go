@@ -19,90 +19,128 @@ import (
 const _ = grpc.SupportPackageIsVersion8
 
 const (
-	PingService_Ping_FullMethodName = "/api.v1.PingService/Ping"
+	MapService_Put_FullMethodName = "/api.v1.MapService/Put"
+	MapService_Get_FullMethodName = "/api.v1.MapService/Get"
 )
 
-// PingServiceClient is the client API for PingService service.
+// MapServiceClient is the client API for MapService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type PingServiceClient interface {
-	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error)
+type MapServiceClient interface {
+	Put(ctx context.Context, in *PutRequest, opts ...grpc.CallOption) (*PutResponse, error)
+	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
 }
 
-type pingServiceClient struct {
+type mapServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewPingServiceClient(cc grpc.ClientConnInterface) PingServiceClient {
-	return &pingServiceClient{cc}
+func NewMapServiceClient(cc grpc.ClientConnInterface) MapServiceClient {
+	return &mapServiceClient{cc}
 }
 
-func (c *pingServiceClient) Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error) {
+func (c *mapServiceClient) Put(ctx context.Context, in *PutRequest, opts ...grpc.CallOption) (*PutResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(PingResponse)
-	err := c.cc.Invoke(ctx, PingService_Ping_FullMethodName, in, out, cOpts...)
+	out := new(PutResponse)
+	err := c.cc.Invoke(ctx, MapService_Put_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// PingServiceServer is the server API for PingService service.
-// All implementations must embed UnimplementedPingServiceServer
+func (c *mapServiceClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetResponse)
+	err := c.cc.Invoke(ctx, MapService_Get_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// MapServiceServer is the server API for MapService service.
+// All implementations must embed UnimplementedMapServiceServer
 // for forward compatibility
-type PingServiceServer interface {
-	Ping(context.Context, *PingRequest) (*PingResponse, error)
-	mustEmbedUnimplementedPingServiceServer()
+type MapServiceServer interface {
+	Put(context.Context, *PutRequest) (*PutResponse, error)
+	Get(context.Context, *GetRequest) (*GetResponse, error)
+	mustEmbedUnimplementedMapServiceServer()
 }
 
-// UnimplementedPingServiceServer must be embedded to have forward compatible implementations.
-type UnimplementedPingServiceServer struct {
+// UnimplementedMapServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedMapServiceServer struct {
 }
 
-func (UnimplementedPingServiceServer) Ping(context.Context, *PingRequest) (*PingResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
+func (UnimplementedMapServiceServer) Put(context.Context, *PutRequest) (*PutResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Put not implemented")
 }
-func (UnimplementedPingServiceServer) mustEmbedUnimplementedPingServiceServer() {}
+func (UnimplementedMapServiceServer) Get(context.Context, *GetRequest) (*GetResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+}
+func (UnimplementedMapServiceServer) mustEmbedUnimplementedMapServiceServer() {}
 
-// UnsafePingServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to PingServiceServer will
+// UnsafeMapServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to MapServiceServer will
 // result in compilation errors.
-type UnsafePingServiceServer interface {
-	mustEmbedUnimplementedPingServiceServer()
+type UnsafeMapServiceServer interface {
+	mustEmbedUnimplementedMapServiceServer()
 }
 
-func RegisterPingServiceServer(s grpc.ServiceRegistrar, srv PingServiceServer) {
-	s.RegisterService(&PingService_ServiceDesc, srv)
+func RegisterMapServiceServer(s grpc.ServiceRegistrar, srv MapServiceServer) {
+	s.RegisterService(&MapService_ServiceDesc, srv)
 }
 
-func _PingService_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PingRequest)
+func _MapService_Put_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PutRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PingServiceServer).Ping(ctx, in)
+		return srv.(MapServiceServer).Put(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: PingService_Ping_FullMethodName,
+		FullMethod: MapService_Put_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PingServiceServer).Ping(ctx, req.(*PingRequest))
+		return srv.(MapServiceServer).Put(ctx, req.(*PutRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// PingService_ServiceDesc is the grpc.ServiceDesc for PingService service.
+func _MapService_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MapServiceServer).Get(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MapService_Get_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MapServiceServer).Get(ctx, req.(*GetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// MapService_ServiceDesc is the grpc.ServiceDesc for MapService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var PingService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "api.v1.PingService",
-	HandlerType: (*PingServiceServer)(nil),
+var MapService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "api.v1.MapService",
+	HandlerType: (*MapServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Ping",
-			Handler:    _PingService_Ping_Handler,
+			MethodName: "Put",
+			Handler:    _MapService_Put_Handler,
+		},
+		{
+			MethodName: "Get",
+			Handler:    _MapService_Get_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

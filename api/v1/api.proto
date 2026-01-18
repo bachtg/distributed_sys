@@ -4,14 +4,27 @@ package api.v1;
 
 option go_package = "github.com/bachtg/distributed_sys/api/v1;v1";
 
-service PingService {
-  rpc Ping(PingRequest) returns (PingResponse);
+service MapService {
+  rpc Put(PutRequest) returns (PutResponse);
+  rpc Get(GetRequest) returns (GetResponse);
 }
 
-message PingRequest {
-  string message = 1;
+message PutRequest {
+  string key = 1;
+  string value = 2;
 }
 
-message PingResponse {
-  string message = 1;
+message PutResponse {
+  int32 code = 1;
+  string message = 2;
+}
+
+message GetRequest {
+  string key = 1;
+}
+
+message GetResponse {
+  int32 code = 1;
+  string message = 2;
+  string value = 3;
 }
