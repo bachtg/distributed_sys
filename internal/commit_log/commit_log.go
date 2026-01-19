@@ -1,7 +1,8 @@
-package domain
+package commit_log
 
 import (
 	"errors"
+	"log/slog"
 	"os"
 	"sort"
 	"strconv"
@@ -10,14 +11,16 @@ import (
 )
 
 type CommitLog struct {
+	logger        *slog.Logger
 	mu            sync.RWMutex
 	segments      []*Segment
 	activeSegment *Segment
 	dir           string
 }
 
-func NewCommitLog(dir string) (*CommitLog, error) {
+func NewCommitLog(logger *slog.Logger, dir string) (*CommitLog, error) {
 	commitLog := &CommitLog{
+		logger:   logger,
 		segments: make([]*Segment, 0),
 		dir:      dir,
 	}
@@ -42,6 +45,8 @@ func (commitLog *CommitLog) loadSegments() error {
 	if err := os.MkdirAll(commitLog.dir, 0755); err != nil {
 		return err
 	}
+
+	commitLog.logger.Info("Loading segments from directory", "dir", commitLog.dir)
 
 	files, err := os.ReadDir(commitLog.dir)
 	if err != nil {
@@ -80,6 +85,9 @@ func (commitLog *CommitLog) loadSegments() error {
 }
 
 func (commitLog *CommitLog) AppendAtOffset(entry LogEntry) error {
+	commitLog.logger.Info("CommitLog | AppendAtOffset | Start processing", "offset", entry.Offset)
+	defer commitLog.logger.Info("CommitLog | AppendAtOffset | Finished processing", "offset", entry.Offset)
+
 	commitLog.mu.Lock()
 	defer commitLog.mu.Unlock()
 
@@ -121,6 +129,9 @@ func (commitLog *CommitLog) AppendAtOffset(entry LogEntry) error {
 }
 
 func (commitLog *CommitLog) Read(offset int64) (LogEntry, error) {
+	commitLog.logger.Info("CommitLog | Read | Start processing", "offset", offset)
+	defer commitLog.logger.Info("CommitLog | Read | Finished processing", "offset", offset)
+
 	commitLog.mu.RLock()
 	defer commitLog.mu.RUnlock()
 
@@ -141,6 +152,8 @@ func (commitLog *CommitLog) Read(offset int64) (LogEntry, error) {
 }
 
 func (commitLog *CommitLog) Close() error {
+	commitLog.logger.Info("CommitLog | Close")
+
 	commitLog.mu.Lock()
 	defer commitLog.mu.Unlock()
 

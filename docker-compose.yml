@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  node1:
+    build: .
+    container_name: raft-node1
+    command: ["-node-id", "node1", "-config", "/app/config/cluster-docker.json"]
+    ports:
+      - "8001:8001"
+      - "7001:7001"
+    volumes:
+      - ./data/node1:/app/data/node1
+      - ./config:/app/config
+    networks:
+      - raft-network
+    environment:
+      - NODE_ID=node1
+
+  node2:
+    build: .
+    container_name: raft-node2
+    command: ["-node-id", "node2", "-config", "/app/config/cluster-docker.json"]
+    ports:
+      - "8002:8002"
+      - "7002:7002"
+    volumes:
+      - ./data/node2:/app/data/node2
+      - ./config:/app/config
+    networks:
+      - raft-network
+    environment:
+      - NODE_ID=node2
+    depends_on:
+      - node1
+
+  node3:
+    build: .
+    container_name: raft-node3
+    command: ["-node-id", "node3", "-config", "/app/config/cluster-docker.json"]
+    ports:
+      - "8003:8003"
+      - "7003:7003"
+    volumes:
+      - ./data/node3:/app/data/node3
+      - ./config:/app/config
+    networks:
+      - raft-network
+    environment:
+      - NODE_ID=node3
+    depends_on:
+      - node1
+
+networks:
+  raft-network:
+    driver: bridge

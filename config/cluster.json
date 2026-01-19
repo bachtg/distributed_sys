@@ -1,0 +1,46 @@
+{
+  "nodes": [
+    {
+      "node_id": "node1",
+      "raft_addr": "127.0.0.1:7001",
+      "http_addr": "127.0.0.1:8001",
+      "data_dir": "./data/node1"
+    },
+    {
+      "node_id": "node2",
+      "raft_addr": "127.0.0.1:7002",
+      "http_addr": "127.0.0.1:8002",
+      "data_dir": "./data/node2",
+      "join_addr": "127.0.0.1:8001"
+    },
+    {
+      "node_id": "node4",
+      "raft_addr": "127.0.0.1:7004",
+      "http_addr": "127.0.0.1:8004",
+      "data_dir": "./data/node4",
+      "join_addr": "127.0.0.1:8001"
+    },
+     {
+      "node_id": "node5",
+      "raft_addr": "127.0.0.1:7005",
+      "http_addr": "127.0.0.1:8005",
+      "data_dir": "./data/node5",
+      "join_addr": "127.0.0.1:8001"
+    },
+     {
+      "node_id": "node6",
+      "raft_addr": "127.0.0.1:7006",
+      "http_addr": "127.0.0.1:8006",
+      "data_dir": "./data/node6",
+      "join_addr": "127.0.0.1:8001"
+    },
+     {
+      "node_id": "node7",
+      "raft_addr": "127.0.0.1:7007",
+      "http_addr": "127.0.0.1:8007",
+      "data_dir": "./data/node7",
+      "join_addr": "127.0.0.1:8001"
+    }
+    
+  ]
+}

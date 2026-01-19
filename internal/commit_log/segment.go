@@ -1,4 +1,4 @@
-package domain
+package commit_log
 
 import (
 	"bufio"

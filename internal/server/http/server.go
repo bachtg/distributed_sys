@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/bachtg/distributed_sys/internal/consensus/raft"
+	"github.com/bachtg/distributed_sys/internal/raft"
 )
 
 type Server struct {
@@ -20,10 +20,19 @@ func NewServer(raftNode *raft.RaftNode, httpAddr string) *Server {
 	}
 
 	mux := http.NewServeMux()
+
+	// Existing endpoints
 	mux.HandleFunc("/append", server.handleAppend)
 	mux.HandleFunc("/read", server.handleRead)
 	mux.HandleFunc("/join", server.handleJoin)
 	mux.HandleFunc("/stats", server.handleStats)
+
+	// New snapshot endpoints
+	mux.HandleFunc("/snapshot/trigger", server.handleSnapshotTrigger)
+	mux.HandleFunc("/snapshot/stats", server.handleSnapshotStats)
+
+	// Health check
+	mux.HandleFunc("/health", server.handleHealth)
 
 	server.httpServer = &http.Server{
 		Addr:    httpAddr,
@@ -99,22 +108,76 @@ func (s *Server) handleJoin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := s.RaftNode.Join(req.NodeID, req.Addr); err != nil {
+		if err.Error() == raft.ErrorNotLeader.Error() {
+			leader := s.RaftNode.GetLeader()
+			w.Header().Set("X-Leader", leader)
+			http.Error(w, fmt.Sprintf("not leader, redirect to %s", leader), http.StatusTemporaryRedirect)
+			return
+		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"status":  "joined",
+		"node_id": req.NodeID,
+	})
 }
 
 func (s *Server) handleStats(w http.ResponseWriter, r *http.Request) {
+	raftStats := s.RaftNode.GetStats()
+
 	stats := map[string]interface{}{
-		"is_leader": s.RaftNode.IsLeader(),
-		"leader":    s.RaftNode.GetLeader(),
-		"node_id":   s.RaftNode.GetNodeID(),
+		"node_id":    s.RaftNode.GetNodeID(),
+		"is_leader":  s.RaftNode.IsLeader(),
+		"leader":     s.RaftNode.GetLeader(),
+		"state":      s.RaftNode.GetState(),
+		"raft_stats": raftStats,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(stats)
+}
+
+func (s *Server) handleSnapshotTrigger(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if err := s.RaftNode.TriggerSnapshot(); err != nil {
+		http.Error(w, fmt.Sprintf("Failed to trigger snapshot: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"status": "snapshot triggered",
+	})
+}
+
+func (s *Server) handleSnapshotStats(w http.ResponseWriter, r *http.Request) {
+	stats, err := s.RaftNode.GetSnapshotStats()
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to get snapshot stats: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(stats)
+}
+
+func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
+	health := map[string]interface{}{
+		"status":    "ok",
+		"node_id":   s.RaftNode.GetNodeID(),
+		"is_leader": s.RaftNode.IsLeader(),
+		"state":     s.RaftNode.GetState(),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(health)
 }
 
 func (s *Server) Start() error {

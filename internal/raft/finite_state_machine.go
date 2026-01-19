@@ -4,35 +4,41 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"path/filepath"
 	"sync"
 
 	"github.com/hashicorp/raft"
 
-	"github.com/bachtg/distributed_sys/internal/domain"
+	"github.com/bachtg/distributed_sys/internal/commit_log"
 )
 
-type FiniteStateMachine struct {
+type finiteStateMachine struct {
+	logger    *slog.Logger
 	mu        sync.RWMutex
-	commitLog *domain.CommitLog
+	commitLog *commit_log.CommitLog
 }
 
 type fsmSnapshot struct{}
 
-func NewFiniteStateMachine(dataDir string) (*FiniteStateMachine, error) {
-	cl, err := domain.NewCommitLog(filepath.Join(dataDir, "commitlog"))
+func newFiniteStateMachine(logger *slog.Logger, dataDir string) (*finiteStateMachine, error) {
+	cl, err := commit_log.NewCommitLog(logger, filepath.Join(dataDir, "commitlog"))
 	if err != nil {
 		return nil, err
 	}
 
-	return &FiniteStateMachine{
+	return &finiteStateMachine{
+		logger:    logger,
 		commitLog: cl,
 	}, nil
 }
 
 // Apply applies a Raft log entry to the FSM
-func (fsm *FiniteStateMachine) Apply(raftLog *raft.Log) interface{} {
-	var logEntry domain.LogEntry
+func (fsm *finiteStateMachine) Apply(raftLog *raft.Log) interface{} {
+	fsm.logger.Info("FSM | Applying | Start processing", "index", raftLog.Index, "data", string(raftLog.Data))
+	defer fsm.logger.Info("FSM | Applying | Finished processing", "index", raftLog.Index)
+
+	var logEntry commit_log.LogEntry
 	if err := json.Unmarshal(raftLog.Data, &logEntry); err != nil {
 		return fmt.Errorf("failed to unmarshal: %v", err)
 	}
@@ -52,13 +58,13 @@ func (fsm *FiniteStateMachine) Apply(raftLog *raft.Log) interface{} {
 
 // Snapshot returns an FSM snapshot
 // NOT IMPLEMENTED
-func (fsm *FiniteStateMachine) Snapshot() (raft.FSMSnapshot, error) {
+func (fsm *finiteStateMachine) Snapshot() (raft.FSMSnapshot, error) {
 	return &fsmSnapshot{}, nil
 }
 
 // Restore restores the FSM from a snapshot
 // NOT IMPLEMENTED
-func (fsm *FiniteStateMachine) Restore(rc io.ReadCloser) error {
+func (fsm *finiteStateMachine) Restore(rc io.ReadCloser) error {
 	return nil
 }
 
